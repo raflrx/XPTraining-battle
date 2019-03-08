@@ -1,5 +1,4 @@
 using System;
-using Battle.Weapons;
 using FluentAssertions;
 using Xunit;
 
@@ -7,7 +6,6 @@ namespace Battle.Tests
 {
     public class SoldierTest
     {
-
         [Fact]
         public void Construction_ASoldierMustHaveAName()
         {
@@ -28,57 +26,40 @@ namespace Battle.Tests
         }
 
         [Fact]
-        public void Construction_ANewSoldierAlwaysHasAweapon()
+        public void Construction_ASoldierMustHaveExactlyOneWeapon()
         {
-            var soldier = new Soldier("Jeanne");
-
-            soldier.Weapon.Should()
-                .NotBeNull()
-                .And
-                .BeOfType<BareFist>();
+           var soldier = new Soldier("name");
+           soldier.Weapon.Should().Be(Weapon.BareFist);
         }
 
         [Fact]
-        public void Construction_ASoldierCantNotHaveAWeapon()
+        public void Construction_ASoldierMustBeAbleToFightWithAnotherSoldier()
         {
-            var soldier = new Soldier("Jeanne");
+            var soldier1 = new Soldier("soldier1", Weapon.BareFist);
+            var soldier2 = new Soldier("soldier2", Weapon.Axe );
 
-            Action act = () => soldier.Weapon = null;
+            var fight = new Fight(soldier1, soldier2);
+            var winner = fight.GetWinner();
 
-            act.Should().Throw<ArgumentNullException>();
+            winner.Should().Be(soldier1);
+        }
+    }
+
+    public class Fight
+    {
+        private readonly Soldier _soldier1;
+        private readonly Soldier _soldier2;
+
+        public Fight(Soldier soldier1, Soldier soldier2)
+        {
+            _soldier1 = soldier1;
+            _soldier2 = soldier2;
         }
 
-        [Fact]
-        public void Construction_ASoldierCanFightASoldier()
+
+        public Soldier GetWinner()
         {
-            var ryan = new Soldier("Private Ryan");
-            var himmler = new Soldier("Himmler");
-
-            ryan.Fight(himmler).Should().BeTrue();
-        }
-
-        [Fact]
-        public void Construction_AxeWinsSword()
-        {
-            var ryan = new Soldier("Private Ryan")
-            {
-                Weapon = new Axe()
-            };
-            var himmler = new Soldier("Himmler")
-            {
-                Weapon = new Sword()
-            };
-
-            ryan.Fight(himmler).Should().BeTrue();
-        }
-
-        [Fact]
-        public void Construction_SwordLoosesAxe()
-        {
-            var ryan = new Soldier("Private Ryan") {Weapon = new Axe()};
-            var himmler = new Soldier("Himmler") {Weapon = new Sword()};
-
-            himmler.Fight(ryan).Should().BeFalse();
+            return null;
         }
     }
 }
