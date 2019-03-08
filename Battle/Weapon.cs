@@ -9,6 +9,7 @@ namespace Battle
         BareFist,
         Spear,
         Sword,
-        Axe
+        Axe,
+        MagicPotion
     }
 }

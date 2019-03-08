@@ -301,5 +301,41 @@ namespace Battle.Tests
 
             winner.Should().Be(attacker);
         }
+
+        [Fact]
+        public void Construction_givenOpponentWeaponHasEvenDamage_MagicPotionWins()
+        {
+            var soldierWithMagicPotion = new Soldier("soldier1", Weapon.MagicPotion);
+            var otherSoldier = new Soldier("soldier2", Weapon.Spear);
+
+            var fight = new Fight(soldierWithMagicPotion, otherSoldier);
+            var winner = fight.GetWinner();
+
+            winner.Should().Be(soldierWithMagicPotion);
+        }
+
+        [Fact]
+        public void Construction_givenOpponentWeaponHasUnevenDamage_MagicPotionLooses()
+        {
+            var soldierWithMagicPotion = new Soldier("soldier1", Weapon.MagicPotion);
+            var otherSoldier = new Soldier("soldier2", Weapon.Axe);
+
+            var fight = new Fight(soldierWithMagicPotion, otherSoldier);
+            var winner = fight.GetWinner();
+
+            winner.Should().Be(otherSoldier);
+        }
+
+        [Fact]
+        public void Construction_givenAttackerAndDefenderHaveMagicPotionAttackerShouldWin()
+        {
+            var attacker = new Soldier("soldier1", Weapon.MagicPotion);
+            var defender = new Soldier("soldier2", Weapon.MagicPotion);
+
+            var fight = new Fight(attacker, defender);
+            var winner = fight.GetWinner();
+
+            winner.Should().Be(attacker);
+        }
     }
 }

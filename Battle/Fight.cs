@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Battle
 {
@@ -18,11 +19,23 @@ namespace Battle
 
         public Soldier GetWinner()
         {
-            return GetDamage(_attacker.Weapon) >= GetDamage(_defender.Weapon) ? _attacker : _defender;
+            if (BothSoldiersHaveMagicPotions())
+            {
+                return _attacker;
+            }
+
+            return GetDamage(_attacker.Weapon, _defender.Weapon) >= GetDamage(_defender.Weapon, _attacker.Weapon) ? _attacker : _defender;
         }
 
-        private static int GetDamage(Weapon weapon)
+        private bool BothSoldiersHaveMagicPotions()
         {
+            return _attacker.Weapon == Weapon.MagicPotion && _defender.Weapon == Weapon.MagicPotion;
+        }
+
+        private static int GetDamage(Weapon weapon, Weapon oponentsWeapon)
+        {
+            if (weapon == Weapon.MagicPotion)
+                return (_weaponDamage[oponentsWeapon] % 2 == 0) ? 10 : 0;
             return _weaponDamage[weapon];
         }
     }
