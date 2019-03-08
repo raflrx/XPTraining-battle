@@ -285,7 +285,6 @@ namespace Battle.Tests
             // army2
             var soldiers2 = new[]
             {
-                new Soldier("soldier1", Weapon.Sword),
                 new Soldier("soldier2", Weapon.Spear),
                 new Soldier("soldier3", Weapon.BareFist)
             };
@@ -336,6 +335,30 @@ namespace Battle.Tests
             var winner = fight.GetWinner();
 
             winner.Should().Be(attacker);
+        }
+
+        [Fact]
+        public void Construction_givenSoldierWithSwordFightsAgaintsSoldierWithAxeThenSoldierWithSwordWinns()
+        {
+            var soldierWithSword = new Soldier("soldier1", Weapon.Sword);
+            var soldierWithAxe = new Soldier("soldier2", Weapon.Axe);
+
+            var fight = new Fight(soldierWithSword, soldierWithAxe);
+            var winner = fight.GetWinner();
+
+            winner.Should().Be(soldierWithSword);
+        }
+
+        [Fact]
+        public void Construction_givenSoldierWithAxeFightsAgaintsSoldierWittSwordThenSoldierWithSwordWinns()
+        {
+            var soldierWithSword = new Soldier("soldier1", Weapon.Sword);
+            var soldierWithAxe = new Soldier("soldier2", Weapon.Axe);
+
+            var fight = new Fight(soldierWithAxe, soldierWithSword);
+            var winner = fight.GetWinner();
+
+            winner.Should().Be(soldierWithAxe);
         }
     }
 }

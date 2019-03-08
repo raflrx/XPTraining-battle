@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
+using System.Text.RegularExpressions;
 
 namespace Battle
 {
@@ -24,7 +25,11 @@ namespace Battle
                 return _attacker;
             }
 
-            return GetDamage(_attacker.Weapon, _defender.Weapon) >= GetDamage(_defender.Weapon, _attacker.Weapon) ? _attacker : _defender;
+            var attackerDamage = GetDamage(_attacker.Weapon, _defender.Weapon) +
+                                 GetAttackerBonus(_attacker.Weapon, _defender.Weapon);
+            var defenderDamage = GetDamage(_defender.Weapon, _attacker.Weapon);
+
+            return attackerDamage >= defenderDamage ? _attacker : _defender;
         }
 
         private bool BothSoldiersHaveMagicPotions()
@@ -36,7 +41,17 @@ namespace Battle
         {
             if (weapon == Weapon.MagicPotion)
                 return (_weaponDamage[oponentsWeapon] % 2 == 0) ? 10 : 0;
+
             return _weaponDamage[weapon];
+        }
+
+        private static int GetAttackerBonus(Weapon weapon, Weapon oponentsWeapon)
+        {
+            if ((weapon == Weapon.Axe && oponentsWeapon == Weapon.Spear)
+                || (weapon == Weapon.Spear && oponentsWeapon == Weapon.Sword)
+                || (weapon == Weapon.Sword && oponentsWeapon == Weapon.Axe))
+                return 3;
+            return 0;
         }
     }
 }
