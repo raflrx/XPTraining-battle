@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using FluentAssertions;
 using Xunit;
@@ -154,6 +155,49 @@ namespace Battle.Tests
             army.FrontManDies();
 
             army.Soldiers.Should().BeEquivalentTo(new[] {soldiers[1]});
+        }
+
+        [Fact]
+        public void Construction_GivenEmptyArmyFrontManCanNotDie()
+        {
+            var army = new Army();
+            Assert.Throws<EmptyArmyException>(() => army.FrontManDies());
+        }
+
+        [Fact]
+        public void Construction_GivenTwoArmiesEngageInWarArmyWithLastManStandingWins()
+        {
+            // army1
+            var soldiers1 = new[]
+            {
+                new Soldier("soldier1", Weapon.BareFist),
+                new Soldier("soldier2", Weapon.Axe)
+            };
+
+            var attacker = new Army();
+            foreach (var soldier in soldiers1)
+            {
+                attacker.Enroll(soldier);
+            }
+
+            // army2
+            var soldiers2 = new[]
+            {
+                new Soldier("soldier1", Weapon.Sword),
+                new Soldier("soldier2", Weapon.Spear),
+                new Soldier("soldier3", Weapon.BareFist)
+            };
+
+            var defender = new Army();
+            foreach (var soldier in soldiers2)
+            {
+                defender.Enroll(soldier);
+            }
+
+            var war = new War(attacker, defender);
+            var winner = war.GetWinner();
+
+            winner.Should().Be(attacker);
         }
     }
 }
