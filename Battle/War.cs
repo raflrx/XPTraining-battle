@@ -1,4 +1,5 @@
 using System;
+using Battle.Tests;
 
 namespace Battle
 {
@@ -6,11 +7,13 @@ namespace Battle
     {
         private readonly Army _attacker;
         private readonly Army _defender;
+        private readonly IHeadQuarters _headQuarters;
 
-        public War(Army attacker, Army defender)
+        public War(Army attacker, Army defender, IHeadQuarters headQuarters)
         {
             _attacker = attacker;
             _defender = defender;
+            _headQuarters = headQuarters;
         }
 
 
@@ -26,7 +29,11 @@ namespace Battle
                     _attacker.FrontManDies();
             }
 
-            return _attacker.HasSoldiers ? _attacker : _defender;
+            var winningArmy = _attacker.HasSoldiers ? _attacker : _defender;
+
+            _headQuarters.ReportVictory(winningArmy.Soldiers.Count);
+
+            return winningArmy;
         }
     }
 }

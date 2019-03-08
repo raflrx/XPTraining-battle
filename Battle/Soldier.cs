@@ -8,6 +8,8 @@ namespace Battle
 
         public Weapon Weapon { get; set; }
 
+        public int Id { get; set; }
+
         public Soldier(string name, Weapon weapon = Weapon.BareFist)
         {
             Weapon = weapon;

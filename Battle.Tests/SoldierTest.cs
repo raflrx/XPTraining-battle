@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Battle.Tests
 {
     public class SoldierTest
     {
+        private Mock<IHeadQuarters> hqMock = new Mock<IHeadQuarters>();
+
         [Fact]
         public void Construction_ASoldierMustHaveAName()
         {
@@ -60,6 +63,46 @@ namespace Battle.Tests
         }
 
         [Fact]
+        public void Construction_GivenSoldiersWhenEnrollSoldiersTheyAreEnlistedWithHq()
+        {
+            var soldiers = new[]
+            {
+                new Soldier("soldier1", Weapon.BareFist),
+                new Soldier("soldier2", Weapon.BareFist)
+            };
+
+            var army = new Army(hqMock.Object);
+            foreach (var soldier in soldiers)
+            {
+                army.Enroll(soldier);
+            }
+
+            hqMock.Verify(e => e.ReportEnlistment(It.Is<string>(name => soldiers.Select(s => s.Name).Contains(name))));
+        }
+
+        [Fact]
+        public void Construction_GivenSoldiersWhenEnrollSoldiersTheSoldiersGetAnId()
+        {
+            var soldiers = new[]
+            {
+                new Soldier("soldier1", Weapon.BareFist),
+                new Soldier("soldier2", Weapon.BareFist)
+            };
+
+            hqMock.Setup(x => x.ReportEnlistment(soldiers[0].Name)).Returns(1);
+            hqMock.Setup(x => x.ReportEnlistment(soldiers[1].Name)).Returns(2);
+            
+            var army = new Army(hqMock.Object);
+            foreach (var soldier in soldiers)
+            {
+                army.Enroll(soldier);
+            }
+
+            army.Soldiers[0].Id.Should().Be(1);
+            army.Soldiers[1].Id.Should().Be(2);
+        }
+
+        [Fact]
         public void Construction_GivenSoldiersWhenEnrollSoldiersThenSoldiersAreAddedToArmy()
         {
             var soldiers = new[]
@@ -68,19 +111,19 @@ namespace Battle.Tests
                 new Soldier("soldier2", Weapon.BareFist)
             };
 
-            var army = new Army();
+            var army = new Army(hqMock.Object);
             foreach (var soldier in soldiers)
             {
                 army.Enroll(soldier);
             }
 
-            army.Soldiers.Should().BeEquivalentTo(soldiers);
+            
         }
 
         [Fact]
         public void Construction_GivenAnArmyWhenEnrollingNullThenAnExceptionShouldBeThrown()
         {
-            var army = new Army();
+            var army = new Army(hqMock.Object);
 
             Assert.Throws<ArgumentNullException>(() => army.Enroll(null));
         }
@@ -94,7 +137,7 @@ namespace Battle.Tests
                 new Soldier("soldier2", Weapon.BareFist)
             };
 
-            var army = new Army();
+            var army = new Army(hqMock.Object);
             foreach (var soldier in soldiers)
             {
                 army.Enroll(soldier);
@@ -106,7 +149,7 @@ namespace Battle.Tests
         [Fact]
         public void Construction_GivenAnEmptyArmyRequestingFrontManShouldFail()
         {
-            var army = new Army();
+            var army = new Army(hqMock.Object);
 
             Assert.Throws<EmptyArmyException>(() => army.FrontMan);
         }
@@ -114,7 +157,7 @@ namespace Battle.Tests
         [Fact]
         public void Construction_GivenAnArmyWithoutSoldiers_HasSoldiersIsFalse()
         {
-            var army = new Army();
+            var army = new Army(hqMock.Object);
 
             army.HasSoldiers.Should().BeFalse();
         }
@@ -128,7 +171,7 @@ namespace Battle.Tests
                 new Soldier("soldier2", Weapon.BareFist)
             };
 
-            var army = new Army();
+            var army = new Army(hqMock.Object);
             foreach (var soldier in soldiers)
             {
                 army.Enroll(soldier);
@@ -146,7 +189,7 @@ namespace Battle.Tests
                 new Soldier("soldier2", Weapon.BareFist)
             };
 
-            var army = new Army();
+            var army = new Army(hqMock.Object);
             foreach (var soldier in soldiers)
             {
                 army.Enroll(soldier);
@@ -158,14 +201,30 @@ namespace Battle.Tests
         }
 
         [Fact]
-        public void Construction_GivenEmptyArmyFrontManCanNotDie()
+        public void Construction_GivenAnArmyWhenFrontManDiesThisIsReportedToHq()
         {
-            var army = new Army();
-            Assert.Throws<EmptyArmyException>(() => army.FrontManDies());
+            var soldiers = new[]
+            {
+                new Soldier("soldier1", Weapon.BareFist),
+                new Soldier("soldier2", Weapon.BareFist)
+            };
+
+            hqMock.Setup(x => x.ReportEnlistment(soldiers[0].Name)).Returns(1);
+            hqMock.Setup(x => x.ReportEnlistment(soldiers[1].Name)).Returns(2);
+
+            var army = new Army(hqMock.Object);
+            foreach (var soldier in soldiers)
+            {
+                army.Enroll(soldier);
+            }
+
+            army.FrontManDies();
+
+            hqMock.Verify(e => e.ReportCasualty(1), Times.Once);
         }
 
         [Fact]
-        public void Construction_GivenTwoArmiesEngageInWarArmyWithLastManStandingWins()
+        public void Construction_GivenAnArmyWinsNumberOfRemainingSoldiersIsReported()
         {
             // army1
             var soldiers1 = new[]
@@ -174,7 +233,7 @@ namespace Battle.Tests
                 new Soldier("soldier2", Weapon.Axe)
             };
 
-            var attacker = new Army();
+            var attacker = new Army(hqMock.Object);
             foreach (var soldier in soldiers1)
             {
                 attacker.Enroll(soldier);
@@ -188,13 +247,56 @@ namespace Battle.Tests
                 new Soldier("soldier3", Weapon.BareFist)
             };
 
-            var defender = new Army();
+            var defender = new Army(hqMock.Object);
             foreach (var soldier in soldiers2)
             {
                 defender.Enroll(soldier);
             }
 
-            var war = new War(attacker, defender);
+            var war = new War(attacker, defender, hqMock.Object);
+            var winner = war.GetWinner();
+
+            hqMock.Verify(x => x.ReportVictory(winner.Soldiers.Count), Times.Once);
+        }
+
+        [Fact]
+        public void Construction_GivenEmptyArmyFrontManCanNotDie()
+        {
+            var army = new Army(hqMock.Object);
+            Assert.Throws<EmptyArmyException>(() => army.FrontManDies());
+        }
+
+        [Fact]
+        public void Construction_GivenTwoArmiesEngageInWarArmyWithLastManStandingWins()
+        {
+            // army1
+            var soldiers1 = new[]
+            {
+                new Soldier("soldier1", Weapon.BareFist),
+                new Soldier("soldier2", Weapon.Axe)
+            };
+
+            var attacker = new Army(hqMock.Object);
+            foreach (var soldier in soldiers1)
+            {
+                attacker.Enroll(soldier);
+            }
+
+            // army2
+            var soldiers2 = new[]
+            {
+                new Soldier("soldier1", Weapon.Sword),
+                new Soldier("soldier2", Weapon.Spear),
+                new Soldier("soldier3", Weapon.BareFist)
+            };
+
+            var defender = new Army(hqMock.Object);
+            foreach (var soldier in soldiers2)
+            {
+                defender.Enroll(soldier);
+            }
+
+            var war = new War(attacker, defender, hqMock.Object);
             var winner = war.GetWinner();
 
             winner.Should().Be(attacker);
